@@ -20,7 +20,7 @@ The reason for breaking the BLEU computation into three phases cook_refs(), cook
 import sys, math, re, xml.sax.saxutils
 import subprocess
 import os
-from tbcs_bleu import Bleu, nltk_corpus_bleu, google_bleu
+from tbcs_bleu import Bleu, google_bleu, nltk_sentence_bleu
 
 # Added to bypass NIST-style pre-processing of hyp and ref files -- wade
 nonorm = 0
@@ -211,16 +211,16 @@ if __name__ == '__main__':
   with open(prediction_file, 'r') as f:
     predictions = f.readlines()
   (goldMap, predictionMap) = computeMaps(predictions, reference_file)
+  
+  # NLTK-BLEU
+  print("NLTK-Sentence-BLEU", nltk_sentence_bleu(predictionMap,goldMap))
 
-  # # Codebert-BLEU
+  # Codebert-BLEU
   print ("Codebert-BLEU",bleuFromMaps(goldMap, predictionMap)[0])
 
-  # # Google-BLEU
+  # Google-BLEU
   print("Google-BLEU",google_bleu.corpus_bleu(predictionMap,goldMap)[1])
-
-  # # NLTK-BLEU
-  print("NLTK-BLEU",nltk_corpus_bleu(predictionMap,goldMap)[1])
-
-  # # TbCS-BLEU
+  
+  # TbCS-BLEU
   bleu_scorer = Bleu(n=4)
   print("TbCS-BLEU",bleu_scorer.compute_score(predictionMap, goldMap, verbose=0)[2])
