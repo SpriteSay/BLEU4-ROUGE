@@ -21,6 +21,8 @@ import sys, math, re, xml.sax.saxutils
 import subprocess
 import os
 from tbcs_bleu import Bleu, google_bleu, nltk_sentence_bleu
+from tbcs_rouge import Rouge
+from rouge import FilesRouge
 
 # Added to bypass NIST-style pre-processing of hyp and ref files -- wade
 nonorm = 0
@@ -202,8 +204,8 @@ def bleuFromMaps(m1, m2):
 
 if __name__ == '__main__':
   '''
-  源数据放第一个参数
-  预测数据放第二个参数
+  源数据放第一个参数 reference_file
+  预测数据放第二个参数 hypotheses_file/prediction_file
   '''
   reference_file = sys.argv[1]
   prediction_file = sys.argv[2]
@@ -212,15 +214,31 @@ if __name__ == '__main__':
     predictions = f.readlines()
   (goldMap, predictionMap) = computeMaps(predictions, reference_file)
   
-  # NLTK-BLEU
+  # # BLEU
+  print("*****BLEU SCORE*****")
+
+  # # NLTK-BLEU
   print("NLTK-Sentence-BLEU", nltk_sentence_bleu(predictionMap,goldMap))
 
-  # Codebert-BLEU
+  # # Codebert-BLEU
   print ("Codebert-BLEU",bleuFromMaps(goldMap, predictionMap)[0])
 
-  # Google-BLEU
+  # # Google-BLEU
   print("Google-BLEU",google_bleu.corpus_bleu(predictionMap,goldMap)[1])
   
-  # TbCS-BLEU
+  # # TbCS-BLEU
   bleu_scorer = Bleu(n=4)
   print("TbCS-BLEU",bleu_scorer.compute_score(predictionMap, goldMap, verbose=0)[2])
+
+  # ROUGE
+  print("*****ROUGE SCORE*****")
+
+  # TbCS-ROUGE
+  rouge_calculator = Rouge()
+  rouge_l, ind_rouge = rouge_calculator.compute_score(goldMap, predictionMap)
+  print("TbCS-ROUGE",rouge_l)
+
+  # Official-ROUGE
+  files_rouge = FilesRouge(metrics=None, stats=None, return_lengths=False,raw_results=False, exclusive=False)
+  scores = files_rouge.get_scores(hyp_path=prediction_file,ref_path=reference_file,avg=True)
+  print(scores)
